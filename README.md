@@ -11,3 +11,11 @@ Number of block grids is equal to the number of different problems you need to s
 kernel <<< (Number of problems), (Parameters w.r.t size of matrix) >>> (input arguments)
 
 You will need to change pre declared vector or matrix size in cuh file according to the scale of your problem.
+
+Functions included in the toolbox:
+- MatrixMulVector
+- MatrixMulMatrix
+- LinearSolver (Square matrix)
+- LinearSolverMatrix (Square matrix)
+- Vecnorm
+- GramSmitt
