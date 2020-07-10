@@ -19,3 +19,5 @@ Functions included in the toolbox:
 - LinearSolverMatrix (Square matrix)
 - Vecnorm
 - GramSmitt
+
+Note that no error handling is implemented yet. Use it carefully!
