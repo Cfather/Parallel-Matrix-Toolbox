@@ -8,6 +8,47 @@
 #define MAX_PREALLOCATE_MATRIX_SIZE 1024
 
 /*
+Copy from one matrix (vector) to another matrix (vector)
+
+Matrix is majored in row by default
+
+The indeces are organized in a Python style. For example,
+0:4 = [0,1,2,3]
+5:6 = [5]
+
+if srcTranspose == false:
+	dst[dst_row_start:dst_row_end, dst_col_start:dst_col_start] = 
+	src[src_row_start:src_row_end, src_col_start:src_col_start]
+else:
+	dst[dst_row_start:dst_row_end, dst_col_start:dst_col_start] =
+	src[src_col_start:src_col_start, src_row_start:src_row_end]
+
+dst_row_end - dst_row_start = src_row_end - src_row_start
+dst_col_end - dst_col_start = src_col_end - src_col_start
+
+if transpose is true, then src_num_row and src_num_col should be
+the number of rows and cols of src^T, src_row_start, src_row_end, 
+src_col_start and src_col_end should be formulated w.r.t src^T
+
+<<< 1, (dst_row_end - dst_row_start, dst_col_end - dst_col_start) >>>
+*/
+__device__ void MatrixCpy(double* dst,
+						  const uint32_t dst_row_num,
+						  const uint32_t dst_col_num,
+						  const uint32_t dst_row_start,
+						  const uint32_t dst_row_end,
+						  const uint32_t dst_col_start,
+						  const uint32_t dst_col_end,
+						  const double* src,
+						  const uint32_t src_row_num,
+						  const uint32_t src_col_num,
+						  const uint32_t src_row_start,
+						  const uint32_t src_row_end,
+						  const uint32_t src_col_start,
+						  const uint32_t src_col_end,
+						  bool srcTranspose = false);
+
+/*
 Matrix operation with vector
 
 y = yTakeAbs(alpha * ATakeAbs(A) * xTakeAbs(x) + beta * y)

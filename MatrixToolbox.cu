@@ -4,6 +4,42 @@
 #include "MatrixToolbox.cuh"
 #include <cstdio>
 
+__device__ void MatrixCpy(double* dst,
+						  const uint32_t dst_row_num,
+						  const uint32_t dst_col_num,
+						  const uint32_t dst_row_start,
+						  const uint32_t dst_row_end,
+						  const uint32_t dst_col_start,
+						  const uint32_t dst_col_end,
+						  const double* src,
+						  const uint32_t src_row_num,
+						  const uint32_t src_col_num,
+						  const uint32_t src_row_start,
+						  const uint32_t src_row_end,
+						  const uint32_t src_col_start,
+						  const uint32_t src_col_end,
+						  bool srcTranspose){
+	// use threads to parallelize
+	uint32_t x_id = threadIdx.x;
+	uint32_t y_id = threadIdx.y;
+	
+	if (x_id >= dst_row_end - dst_row_start) return;
+	if (y_id >= dst_col_end - dst_col_start) return;
+
+	uint32_t dst_id = (x_id + dst_row_start) * dst_col_num + y_id + dst_col_start;
+	uint32_t src_id = 0;
+	if (!srcTranspose) {
+		src_id = (x_id + src_row_start) * src_col_num + y_id + src_col_start;
+	}
+	else {
+		src_id = (y_id + src_col_start) * src_row_num + x_id + src_row_start;
+	}
+
+	dst[dst_id] = src[src_id];
+
+	__syncthreads();
+}
+
 __device__ void MatrixMulVector(const double* A,
 								const double* x,
 								double* y,
