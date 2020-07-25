@@ -13,6 +13,7 @@ kernel <<< (Number of problems), (Parameters w.r.t size of matrix) >>> (input ar
 You will need to change pre declared vector or matrix size in cuh file according to the scale of your problem.
 
 Functions included in the toolbox:
+- MatrixCpy
 - MatrixMulVector
 - MatrixMulMatrix
 - LinearSolver (Square matrix)
