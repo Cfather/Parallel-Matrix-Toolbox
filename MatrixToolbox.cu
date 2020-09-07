@@ -4,7 +4,7 @@
 #include "MatrixToolbox.cuh"
 #include <cstdio>
 
-__device__ void MatrixCpy(double* dst,
+__global__ void MatrixCpy(double* dst,
 						  const uint32_t dst_row_num,
 						  const uint32_t dst_col_num,
 						  const uint32_t dst_row_start,
@@ -18,6 +18,7 @@ __device__ void MatrixCpy(double* dst,
 						  const uint32_t src_row_end,
 						  const uint32_t src_col_start,
 						  const uint32_t src_col_end,
+						  const double scalar,
 						  bool srcTranspose){
 	// use threads to parallelize
 	uint32_t x_id = threadIdx.x;
@@ -35,12 +36,17 @@ __device__ void MatrixCpy(double* dst,
 		src_id = (y_id + src_col_start) * src_row_num + x_id + src_row_start;
 	}
 
-	dst[dst_id] = src[src_id];
+	if (scalar == 1.0) {
+		dst[dst_id] = src[src_id];
+	}
+	else {
+		dst[dst_id] = scalar * src[src_id];
+	}
 
 	__syncthreads();
 }
 
-__device__ void MatrixMulVector(const double* A,
+__global__ void MatrixMulVector(const double* A,
 								const double* x,
 								double* y,
 								uint32_t A_num_row,
@@ -49,7 +55,7 @@ __device__ void MatrixMulVector(const double* A,
 								double alpha,
 								double beta,
 						        bool ATakeAbs,
-								bool xTakeAbs,											
+								bool xTakeAbs,									
 								bool yTakeAbs) {
 	// use threads to parallelize
 	uint32_t t_id = threadIdx.x;
@@ -109,7 +115,7 @@ __device__ void MatrixMulVector(const double* A,
 	__syncthreads();
 }
 
-__device__ void MatrixMulMatrix(const double* A,
+__global__ void MatrixMulMatrix(const double* A,
 								const double* x,
 								double* y,
 								uint32_t A_num_row,
@@ -125,8 +131,6 @@ __device__ void MatrixMulMatrix(const double* A,
 	// use threads to parallelize
 	uint32_t x_id = threadIdx.x;
 	uint32_t y_id = threadIdx.y;
-
-	printf("%d %d\n", threadIdx.x, threadIdx.y);
 
 	// copy data to shared memory
 	__shared__ double sha_A[MAX_PREALLOCATE_MATRIX_SIZE];
@@ -178,7 +182,7 @@ __device__ void MatrixMulMatrix(const double* A,
 	__syncthreads();
 }
 
-__device__ void LinearSolver(const double* A,
+__global__ void LinearSolver(const double* A,
 							 const double* b, 
 							 double* sol, 
 							 uint32_t n,
@@ -190,8 +194,6 @@ __device__ void LinearSolver(const double* A,
 	__shared__ double I[MAX_PREALLOCATE_MATRIX_SIZE];
 	__shared__ double sha_A[MAX_PREALLOCATE_MATRIX_SIZE];
 	__shared__ double sha_b[MAX_PREALLOCATE_VECTOR_SIZE];
-	__shared__ double pivot_value;
-	__shared__ uint32_t pivot;
 
 	if (x_id < n && y_id < n) {
 		I[x_id * n + y_id] = (x_id == y_id) ? 1.0 : 0.0;
@@ -284,7 +286,7 @@ __device__ void LinearSolver(const double* A,
 	__syncthreads();
 }
 
-__device__ void LinearSolverMatrix(const double* A,
+__global__ void LinearSolverMatrix(const double* A,
 								   const double* b, 
 								   double* sol, 
 	                               uint32_t n,
@@ -390,7 +392,7 @@ __device__ void LinearSolverMatrix(const double* A,
 	__syncthreads();
 }
 
-__device__ void vecnorm(double* A, 
+__global__ void vecnorm(double* A, 
 						double* output, 
 						uint32_t rowNum, 
 						uint32_t colNum) {
@@ -401,9 +403,11 @@ __device__ void vecnorm(double* A,
 		sum += elt * elt;
 	}
 	output[colId] = sqrt(sum);
+
+	__syncthreads();
 }
 
-__device__ void GramSchmidt(double* A, 
+__global__ void GramSchmidt(double* A, 
 							double* output, 
 							uint32_t rowNum, 
 							uint32_t colNum) {
